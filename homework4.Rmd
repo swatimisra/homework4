@@ -1,0 +1,218 @@
+---
+title: "Homework 4"
+author: "Swati Misra (SM83264)"
+date: "2024-02-16"
+output: pdf_document
+---
+
+Link to GitHub Repo: https://github.com/swatimisra/homework4
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+library(mosaic)
+```
+
+# Problem 1
+
+### Theory A
+
+Claim: Gas stations charge more if they lack direct competition in sight. 
+
+Evidence: 
+```{r, echo = FALSE, results = 'hide'}
+gas <- read.csv("gasprices.csv")
+#confint btwn competitors in sight and no competitors in sight
+filteredGas <- gas %>%
+  mutate(isCompetitor = ifelse(Competitors == "Y", TRUE, FALSE))
+
+boot_gas = do(10000)*diffmean(Price~isCompetitor, data=mosaic::resample(filteredGas))
+
+```
+
+```{r, echo = FALSE}
+confint(boot_gas, level = 0.95)
+```
+
+Conclusion: The difference in price between gas stations with competition in sight and no competition is somewhere between 0.396 and 0.594 cents, with 95% confidence. This theory is supported by the data. Since this confidence interval does not include the value 0, it is statistically significant. We can attribute the price of gas at this sample of gas stations to the existence of direct competition in sight. This conclusion can be attributed to reasons other than chance. 
+
+### Theory B 
+
+Claim: The richer the area, the higher the gas price. 
+
+Evidence:
+```{r,echo = FALSE}
+boot_gaslm = do(10000)*lm(Price ~ Income, data=mosaic::resample(gas))
+
+confint(boot_gaslm, level = 0.95)
+```
+
+Conclusion: The difference in price between higher and lower income areas is somewhere between 6.618007e-07 and 1.764158e-06 cents, with 95% confidence. Since this confidence interval does not include the value of 0, we can say it may be statistically significant. There may be a relationship the income level of the area and the price of gas at the gas stations in this sample. However, it is notable that the interval is very close to 0, which may mean that any relationship may be very weak or nonexistent. 
+
+### Theory C
+
+Claim: Gas stations at stoplights charge more. 
+
+Evidence:
+```{r, echo = FALSE}
+filteredGas1 <- gas %>%
+  mutate(isStoplight = ifelse(Stoplight == "Y", TRUE, FALSE))
+
+boot_gas1 = do(10000)*diffmean(Price~isStoplight, data=mosaic::resample(filteredGas1))
+
+confint(boot_gas1, level = 0.95)
+
+```
+
+Conclusion: The difference in price between gas stations that are near stoplights and not near stoplights is somewhere between -0.04 and 0.031 cents, with 95% confidence. Because this confidence interval includes the value of 0, there is no statistical significance at the 95% confidence level. We cannot satisfactorily claim that gas stations at stoplights charge more. This conclusion cannot statistically confirm that the relationship is attributed to a specific cause other than chance.
+
+### Theory D
+
+Claim: Gas stations with direct highway access charge more. 
+
+Evidence: 
+```{r, echo = FALSE}
+
+filteredGas2 <- gas %>%
+  mutate(isHighway = ifelse(Highway == "Y", TRUE, FALSE))
+
+boot_gas2 = do(10000)*diffmean(Price~isHighway, data=mosaic::resample(filteredGas2))
+
+confint(boot_gas2, level = 0.95)
+
+```
+
+Conclusion: The difference in price between gas stations with direct highway access and no highway access is somewhere between .009 and .08 cents, with 95% confidence. Because this confidence interval does not include the value of 0, there is statistical significance at the 95% confidence level. We can satisfactorily claim that gas stations with direct highway access charge more. This conclusion can statistically confirm that the relationship is attributed to a specific cause other than chance.
+
+### Theory E
+
+Claim: Shell charges more than all other non-Shell brands. 
+
+Evidence: 
+```{r, echo = FALSE}
+
+filteredGas3 <- gas %>%
+  mutate(isShell = ifelse(Brand == "Shell", TRUE, FALSE))
+
+boot_gas3 = do(10000)*diffmean(Price~isShell, data=mosaic::resample(filteredGas3))
+
+confint(boot_gas3, level = 0.95)
+
+```
+Conclusion: The difference in price between gas stations that are Shell and other brands is somewhere between -0.009 and 0.065 cents, with 95% confidence. Because this confidence interval includes the value of 0, there is no statistical significance at the 95% confidence level. We cannot satisfactorily claim that Shell charges more than all other non-Shell brands. This conclusion cannot statistically confirm that the relationship is attributed to a specific cause other than chance.
+
+# Problem 2
+```{r, echo = FALSE, results = 'hide'}
+sclass <- read.csv("sclass.csv")
+```
+
+### Part A
+```{r, echo = FALSE}
+filteredCars <- sclass %>%
+  filter(year == 2011, trim == "63 AMG")
+  
+
+boot_cars = do(10000)*mean(~mileage, data=mosaic::resample(filteredCars))
+confint(boot_cars, level=0.95)
+```
+
+### Part B
+```{r, echo = FALSE}
+
+filteredCars1 <- sclass %>%
+  filter(year == 2014, trim == "550") %>%
+  mutate(isBlack = ifelse(color == "Black", TRUE, FALSE))
+
+boot_cars1 = do(10000)*prop(~isBlack, data=mosaic::resample(filteredCars1))
+confint(boot_cars1, level=0.95)
+```
+# Problem 3
+
+```{r, echo = FALSE, results = 'hide'}
+nbc <- read.csv("nbc_pilotsurvey.csv")
+```
+
+
+### Part A
+Question: What show makes people happier: "Living with Ed" or "My Name is Earl"?
+
+Approach: In order to answer the question, first I filtered the data to only include responses where the show was "Living with Ed" or "My Name is Earl" using the filter() function. I then used the confint() function in R to construct the confidence interval. 
+
+Results:
+```{r, echo = FALSE}
+nbcFiltered1 <- nbc %>%
+  filter(Show == "Living with Ed" | Show == "My Name is Earl")
+
+boot_nbc1 = do(10000)*diffmean(Q1_Happy~Show, data=mosaic::resample(nbcFiltered1))
+confint(boot_nbc1, level=0.95)
+```
+Conclusion: 
+Because this confidence interval includes the value of 0, there is no statistical significance at the 95% confidence level. We cannot satisfactorily claim that one show consistently produces a higher mean Q1_Happy response among viewers. This conclusion cannot statistically confirm that the relationship is attributed to a specific cause other than chance.
+
+### Part B
+
+Question: Which reality/contest show made people feel more annoyed: "The Biggest Loser" or "The Apprentice: Los Angeles"?
+
+Approach: First I filtered the data set to only include the responses to the shows "The Biggest Loser" and "The Apprentice: Los Angeles". I then used the confint() function to create a confidence interval. 
+
+Results:
+```{r, echo = FALSE}
+nbcFiltered2 <- nbc %>%
+  filter(Show == "The Biggest Loser" | Show == "The Apprentice: Los Angeles")
+
+boot_nbc2 = do(10000)*diffmean(Q1_Annoyed~Show, data=mosaic::resample(nbcFiltered2))
+confint(boot_nbc2, level=0.95)
+```
+
+Conclusion:
+Because this confidence interval does not include 0, there is a statistically significant difference in the two mean values at 95% confidence level. There is evidence that one show consistently produces a higher mean Q1_Annoyed response among viewers. The difference in the average viewer response to the Q1_Annoyed question can be attributed to a particular relationship rather than chance. 
+
+### Part C
+
+Question: What proportion of American TV watchers would find the show "Dancing with the Stars" confusing?
+
+Approach: I first filtered the data to only include the responses to the show "Dancing with the Stars". I then used the confint() function to find the confidence interval for the proportion of watchers. 
+
+Results:
+```{r, echo = FALSE, results = 'hide'}
+nbcFiltered3 <- nbc %>%
+  filter(Show == "Dancing with the Stars") %>%
+  mutate(veryConfused = ifelse(Q2_Confusing >= 4, TRUE, FALSE))
+
+prop(~veryConfused, data = nbcFiltered3)
+```
+
+```{r, echo = FALSE}
+boot_nbc3 = do(10000)*prop(~veryConfused, data=mosaic::resample(nbcFiltered3))
+confint(boot_nbc3, level=0.95)
+```
+
+Conclusion: 
+Based on the confidence interval, we can say we expect a proportion of around 0.039 to 0.116 watchers to give a response of 4 or greater to the question at a 95% confidence level. Since there is no 0 in the interval, this relationship is statistically significant and can be attributed to a particular relationship rather than chance. 
+
+# Problem 4
+```{r, echo = FALSE, results = 'hide'}
+ebay <- read.csv("ebay.csv")
+ebay1 <- ebay %>%
+  mutate(rev_ratio = rev_after/rev_before)
+
+boot_ebay = do(10000)*diffmean(rev_ratio~adwords_pause, data=mosaic::resample(ebay1))
+
+```
+
+Question: Is the revenue ratio the same in the treatment and control groups or does paid search advertising on Google create extra revenue for Ebay?
+
+Approach: I first used the mutate() function to create the rev_ratio variable which is the ratio of the revenue after the experiment and before the experiment. I then used the confint() function to create a 95% confidence interval.
+
+Results:
+```{r, echo = FALSE}
+confint(boot_ebay, level = 0.95)
+```
+
+Conclusion:
+Because this confidence interval does not include the value of 0, there is statistical significance at the 95% confidence level. We can satisfactorily claim that paid search advertising creates extra revenue for EBay or that the revenue ratio is the same in the treatment and control groups. This conclusion can statistically confirm that the relationship is attributed to a specific cause other than chance.
+
+
+
+
